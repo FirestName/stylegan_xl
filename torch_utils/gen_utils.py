@@ -1,3 +1,5 @@
+# Code from: https://github.com/PDillis/stylegan3-fun
+
 import os
 import re
 import json
@@ -423,7 +425,7 @@ def w_to_img(G, dlatents: Union[List[torch.Tensor], torch.Tensor], noise_mode: s
     return synth_image
 
 
-def get_w_from_seed(G, batch_sz: int, device: torch.device, truncation_psi: float, seed: Optional[int], centroids_path: Optional[str], class_idx: Optional[int]) -> torch.Tensor:
+def get_w_from_seed(G, batch_sz, device, truncation_psi=1.0, seed=None, centroids_path=None, class_idx=None):
     """Get the dlatent from a list of random seeds, using the truncation trick (this could be optional)"""
 
     if G.c_dim != 0:
@@ -466,15 +468,15 @@ def get_w_from_seed(G, batch_sz: int, device: torch.device, truncation_psi: floa
     return w
 
 
-def get_w_from_file(file: Union[str, os.PathLike], return_ext: bool = False) -> Tuple[np.ndarray, Optional[str]]:
-    """Get dlatent (w) from a .npy or .npz file"""
+def get_w_from_file(file, device='cuda', return_ext=False):
     filename, file_extension = os.path.splitext(file)
     assert file_extension in ['.npy', '.npz'], f'"{file}" has wrong file format! Use either ".npy" or ".npz"'
+
     if file_extension == '.npy':
         r = (np.load(file), '.npy') if return_ext else np.load(file)
-        return r
-    r = (np.load(file)['w'], '.npz') if return_ext else np.load(file)['w']
-    return r
+    else:
+        r = (np.load(file)['w'], '.npz') if return_ext else np.load(file)['w']
+    return torch.from_numpy(r).to(device)
 
 
 # ----------------------------------------------------------------------------

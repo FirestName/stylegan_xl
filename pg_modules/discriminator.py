@@ -2,12 +2,14 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.transforms import Normalize
 import pickle
 
 from training.diffaug import DiffAugment
 from training.networks_stylegan2 import FullyConnectedLayer
 from pg_modules.blocks import conv2d, DownBlock, DownBlockPatch
 from pg_modules.projector import F_RandomProj
+from feature_networks.constants import VITS
 
 class SingleDisc(nn.Module):
     def __init__(self, nc=None, ndf=None, start_sz=256, end_sz=8, head=None, patch=False):
@@ -176,7 +178,6 @@ class ProjectedDiscriminator(torch.nn.Module):
                 **backbone_kwargs,
             )
 
-            bb_name += f"_{i}"
             feature_networks.append([bb_name, feat])
             discriminators.append([bb_name, disc])
 
@@ -195,13 +196,22 @@ class ProjectedDiscriminator(torch.nn.Module):
         logits = []
 
         for bb_name, feat in self.feature_networks.items():
+
+            # apply augmentation (x in [-1, 1])
             x_aug = DiffAugment(x, policy='color,translation,cutout') if self.diffaug else x
 
-            if self.interp224:
-                x_aug = F.interpolate(x_aug, 224, mode='bilinear', align_corners=False)
+            # transform to [0,1]
+            x_aug = x_aug.add(1).div(2)
 
-            features = feat(x_aug)
-            l = self.discriminators[bb_name](features, c)
-            logits += l
+            # apply F-specific normalization
+            x_n = Normalize(feat.normstats['mean'], feat.normstats['std'])(x_aug)
+
+            # upsample if smaller, downsample if larger + VIT
+            if self.interp224 or bb_name in VITS:
+                x_n = F.interpolate(x_n, 224, mode='bilinear', align_corners=False)
+
+            # forward pass
+            features = feat(x_n)
+            logits += self.discriminators[bb_name](features, c)
 
         return logits

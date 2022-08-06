@@ -236,6 +236,10 @@ def main(**kwargs):
         c.G_kwargs.conv_kernel = 1 if opts.cfg == 'stylegan3-r' else 3
         c.G_kwargs.use_radial_filters = True if opts.cfg == 'stylegan3-r' else False
 
+        if opts.cfg == 'stylegan3-r':
+            c.G_kwargs.channel_base *= 2
+            c.G_kwargs.channel_max *= 2
+
     # Resume.
     if opts.resume is not None:
         c.resume_pkl = opts.resume
