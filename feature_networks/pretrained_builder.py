@@ -81,6 +81,14 @@ def _make_resnet_clip(model):
 
     return pretrained
 
+def _make_vit32_clip(model):
+    
+        features = [96, 192, 384, 768]
+        hooks = [2, 5, 8, 11]
+        vit_features = 768
+        start_index=1
+    
+
 def _make_densenet(model):
     pretrained = nn.Module()
 
@@ -402,6 +410,10 @@ def _make_pretrained(backbone, verbose=False):
     elif backbone == 'resnet50_clip':
         model = clip.load('RN50', device='cpu', jit=False)[0].visual
         pretrained = _make_resnet_clip(model)
+        
+    elif backbone == 'vit_clip':
+        model = clip.load('ViT-B/32', device='cpu', jit=False)[0].visual
+        pretrained = _make_vit32_clip(model)
 
     else:
         raise NotImplementedError('Wrong model name?')
