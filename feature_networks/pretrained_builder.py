@@ -189,7 +189,22 @@ def _make_vit_clip(model):
         pretrained.layer1 = model.layer2
         pretrained.layer2 = model.layer3
         pretrained.layer3 = model.layer4
-
+#{
+#    "embed_dim": 512,
+#    "vision_cfg": {
+#        "image_size": 224,
+#        "layers": 12,
+#        "width": 768,
+#        "patch_size": 32
+#    },
+#    "text_cfg": {
+#        "context_length": 77,
+#       "vocab_size": 49408,
+#       "width": 512,
+#       "heads": 8,
+#        "layers": 12
+#    }
+#}
 
     return pretrained
 
